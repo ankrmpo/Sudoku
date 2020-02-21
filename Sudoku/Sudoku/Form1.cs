@@ -14,31 +14,36 @@ namespace Sudoku
     {
         private List<Button> levels; //gumbi za odabir osnovnih težina
         private List<Button> slevels; //gumbi za odabir posebnih težina
-        DataGridView grid; //sudoku
+        private DataGridView grid; //sudoku
+        private List<DataGridView> grids; //sudoku grid za samurai
         private int cellwidth;
         private int cellheight;
+        private int cellnumber;
 
         public Form1()
         {
             levels = new List<Button>();
             slevels = new List<Button>();
+            grids = new List<DataGridView>();
 
             cellwidth = 45;
             cellheight = 45;
+            cellnumber = 9;
 
             InitializeComponent();
             DoubleBuffered = true; //za smanjenje grafičkih smetnji
         }
 
-        private void initialize_NewGrid() //svaki sudoku će imati ova svojstva
+        private DataGridView initialize_NewGrid(string ime) //svaki sudoku će imati ova svojstva
         {
             grid = new DataGridView();
-            grid.Name = "grid";
+            grid.Name = ime;
             grid.AllowUserToResizeColumns = false;
             grid.AllowUserToResizeRows = false;
             grid.AllowUserToAddRows = false;
             grid.RowHeadersVisible = false;
             grid.ColumnHeadersVisible = false;
+            grid.MultiSelect = false;
             grid.GridColor = Color.DarkRed;
             grid.DefaultCellStyle.BackColor = Color.WhiteSmoke;
             grid.DefaultCellStyle.SelectionBackColor = Color.Crimson;
@@ -46,6 +51,8 @@ namespace Sudoku
             grid.Font = new Font("Calibri", 16.2F, FontStyle.Bold, GraphicsUnit.Point, ((byte)(0)));
             grid.ForeColor = Color.DarkRed;
             grid.SelectionMode = DataGridViewSelectionMode.CellSelect;
+            grid.EditingControlShowing += new DataGridViewEditingControlShowingEventHandler(grid_EditingControlShowing);
+            return grid;
         }
 
         private void clear_Buttons() //čisti liste gumbi
@@ -78,7 +85,8 @@ namespace Sudoku
         {
             clear_Buttons();
             this.Controls.Remove(grid);
-            initialize_NewGrid();
+            for(int i = 0; i < grids.Count; ++i)
+                this.Controls.Remove(grids[i]);
             this.label1.Visible = true;
 
             int x = 0;
@@ -219,19 +227,42 @@ namespace Sudoku
         {
             Button gumb = (sender as Button);
 
-            int cellnumber = 0;
             if (gumb.Name == "easy" || gumb.Name == "medium" || gumb.Name == "hard") //one sve imaju tablicu 9x9
             {
-                cellnumber = 9;
+                initialize_NewGrid("grid");
                 grid.Location = new Point(this.label1.Location.X, this.button1.Location.Y - 100);
+                start_NormalGame();
             }
+
             else if (gumb.Name == "16") //tablica 16x16
             {
+                initialize_NewGrid("grid");
                 cellnumber = 16;
                 this.label1.Visible = false;
                 grid.Location = new Point(this.label1.Location.X - 200, this.button1.Location.Y - 350);
+                start_NormalGame();
             }
 
+            else if (gumb.Name == "samurai") //samurai grid, 5 tablica 9x9
+            {
+                cellnumber = 9;
+                cellwidth = 30;
+                cellheight = 30;
+                this.label1.Visible = false;
+                for (int j = 0; j < 5; ++j)
+                {
+                    string name = "grid" + j.ToString();
+                    DataGridView grid = initialize_NewGrid(name);
+                    grids.Add(grid);
+                }
+               
+                start_SamuraiGame();
+            }
+  
+        }
+
+        private void start_NormalGame()
+        {
             grid.Size = new Size(cellwidth * cellnumber + 3, cellwidth * cellnumber + 3);
 
             for (int i = 0; i < cellnumber; ++i)
@@ -242,7 +273,6 @@ namespace Sudoku
                 grid.Columns[i].Name = (i + 1).ToString();
                 grid.Columns[i].Width = cellwidth;
                 grid.Columns[i].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-
                 DataGridViewRow row = new DataGridViewRow();
                 row.Height = cellheight;
                 grid.Rows.Add(row);
@@ -265,8 +295,66 @@ namespace Sudoku
                 grid.Rows[7].DividerHeight = 2;
                 grid.Rows[11].DividerHeight = 2;
             }
-            
+
             Controls.Add(grid);
+        }
+
+        private void start_SamuraiGame()
+        {
+            Size size = new Size(cellwidth * cellnumber, cellwidth * cellnumber);
+
+            grids[0].Location = new Point(this.label1.Location.X - 300, this.button1.Location.Y - 300);
+            grids[1].Location = new Point(grids[0].Location.X + size.Width + 3 * cellwidth, grids[0].Location.Y);
+            grids[2].Location = new Point(grids[0].Location.X + 6 * cellwidth, grids[0].Location.Y + 6 * cellwidth);
+            grids[3].Location = new Point(grids[0].Location.X, grids[0].Location.Y + size.Width + 3 * cellwidth);
+            grids[4].Location = new Point(grids[1].Location.X, grids[3].Location.Y);
+
+            for (int i = 0; i < grids.Count; ++i)
+            {
+                grids[i].Size = size;
+                for (int j = 0; j < cellnumber; ++j)
+                {
+                    DataGridViewTextBoxColumn text = new DataGridViewTextBoxColumn();
+                    text.MaxInputLength = 1;
+                    grids[i].Columns.Add(text);
+                    grids[i].Columns[j].Name = (i + 1).ToString() + (j + 1).ToString();
+                    grids[i].Columns[j].Width = cellwidth;
+                    grids[i].Columns[j].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                    DataGridViewRow row = new DataGridViewRow();
+                    row.Height = cellheight;
+                    grids[i].Rows.Add(row);
+                }
+
+                grids[i].Rows[0].Cells[0].Style.SelectionBackColor=Color.WhiteSmoke;//treba promijeniti poslije
+                grids[i].Columns[2].DividerWidth = 2;
+                grids[i].Columns[5].DividerWidth = 2;
+                grids[i].Rows[2].DividerHeight = 2;
+                grids[i].Rows[5].DividerHeight = 2;
+
+                Controls.Add(grids[i]);
+            }                
+        }
+        //ne smijemo dopustiti unos nekih slova
+        private void grid_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
+        {
+            e.Control.KeyPress -= new KeyPressEventHandler(cell_KeyPress);
+            TextBox tb = e.Control as TextBox;
+            if (tb != null) tb.KeyPress += new KeyPressEventHandler(cell_KeyPress);
+        }
+
+        private void cell_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (cellnumber == 9 && (!char.IsDigit(e.KeyChar) || (char.IsDigit(e.KeyChar) && char.Equals(e.KeyChar, '0'))))
+            {
+                e.Handled = true;
+            }
+            else if (cellnumber == 16)
+            {
+                if ((!char.IsDigit(e.KeyChar) && !char.Equals(e.KeyChar, 'A') && !char.Equals(e.KeyChar, 'B') && !char.Equals(e.KeyChar, 'C') && !char.Equals(e.KeyChar, 'D') && !char.Equals(e.KeyChar, 'E') && !char.Equals(e.KeyChar, 'F') && !char.Equals(e.KeyChar, 'G')) || (char.IsDigit(e.KeyChar) && char.Equals(e.KeyChar, '0')))
+                {
+                    e.Handled = true;
+                }
+            }
         }
     }
 }
