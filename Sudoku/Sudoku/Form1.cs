@@ -19,12 +19,23 @@ namespace Sudoku
         private int cellwidth;
         private int cellheight;
         private int cellnumber;
+
+        //gumbi i labeli za vrijeme, bilješke i kraj igre
         private Button notesb;
         private Label notesl;
         private Label time;
         private Timer t;
         private int timeElapsed;
         private bool on;
+        private Label congratsl;
+        private PictureBox congratsp;
+
+        //matrice igre
+        private int[,] matrica9;
+        private int[,] matrica16;
+        //generirane matrice
+        private int[,] gmatrica9;
+        private int[,] gmatrica16;
 
         public Form1()
         {
@@ -37,6 +48,11 @@ namespace Sudoku
             cellheight = 45;
             cellnumber = 9;
             timeElapsed = 0;
+
+            matrica9 = new int[9, 9];
+            matrica16 = new int[16, 16];
+            gmatrica9 = new int[9, 9];
+            gmatrica16 = new int[16, 16];
 
             InitializeComponent();
             DoubleBuffered = true; //za smanjenje grafičkih smetnji
@@ -89,6 +105,7 @@ namespace Sudoku
             levels.Clear();
             slevels.Clear();
 
+            this.Controls.Remove(grid);
             for (int i = 0; i < grids.Count; ++i)
                 this.Controls.Remove(grids[i]);
 
@@ -100,8 +117,14 @@ namespace Sudoku
             this.Controls.Remove(time);
             timeElapsed = 0;
 
-            this.Controls.Remove(grid);
+            Array.Clear(matrica9, 0, matrica9.Length);
+            Array.Clear(matrica16, 0, matrica16.Length);
+            Array.Clear(gmatrica9, 0, gmatrica9.Length);
+            Array.Clear(gmatrica16, 0, gmatrica16.Length);
+
             this.label1.Visible = true;
+            this.Controls.Remove(congratsl);
+            this.Controls.Remove(congratsp);
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -190,7 +213,7 @@ namespace Sudoku
             show_SpecialLevels();
         }
 
-        private void show_SpecialLevels()
+        private void show_SpecialLevels() //prikazuje posebne levele
         {
             clear_All();
             int x = 0;
@@ -242,7 +265,7 @@ namespace Sudoku
             }
         }
 
-        private void initialize_Notes()
+        private void initialize_Notes() //stvara label i gumb za bilješke
         {
             notesb = new Button();
             notesl = new Label();
@@ -275,7 +298,7 @@ namespace Sudoku
             this.Controls.Add(notesb);
         }
 
-        private void initialize_Time()
+        private void initialize_Time() //stvara label za prikaz vremena
         {
             time = new Label();
             time.Name = "time";
@@ -305,6 +328,7 @@ namespace Sudoku
 
             if (gumb.Name == "easy" || gumb.Name == "medium" || gumb.Name == "hard" || gumb.Name == "killer") //one sve imaju tablicu 9x9
             {
+                generate_sudoku9(sender); //generiramo sudoku igru 9x9 ovisno o težini
                 initialize_NewGrid("grid");
                 cellwidth = 45;
                 cellheight = 45;
@@ -315,6 +339,7 @@ namespace Sudoku
 
             else if (gumb.Name == "16") //tablica 16x16
             {
+                generate_sudoku16(); //generiramo sudoku igru 16x16
                 initialize_NewGrid("grid");
                 cellwidth = 35;
                 cellheight = 35;
@@ -422,6 +447,7 @@ namespace Sudoku
                 Controls.Add(grids[i]);
             }                
         }
+
         //ne smijemo dopustiti unos nekih slova
         private void grid_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
         {
@@ -447,20 +473,35 @@ namespace Sudoku
             }
         }
 
+        //spremanje unešenih podataka u matrice i provjera je li igra gotova
         private void cell_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
             DataGridView grid = (sender as DataGridView);
+            DataGridViewCell cell = grid.Rows[e.RowIndex].Cells[e.ColumnIndex];
 
-            if (on)
+            if (on) //ako su uključene bilješke, onda samo želimo zapisati moguće vrijednosti, ali ih ne spremamo
             {
-                //dopustiti unos više vrijednosti u jednu čeliju 
+                //dopustiti unos više vrijednosti u jednu ćeliju
             }
 
-            else
+            else //odlučili smo se za vrijednost, spremamo je u matricu
             {
-                //dopustiti samo jednu vrijednost u svaku čeliju
+                //dopustiti samo jednu vrijednost u svaku ćeliju, to je defaultno
+                if (cellnumber == 9)
+                {
+                    matrica9[e.RowIndex, e.ColumnIndex] = Convert.ToInt32(cell.Value);
+                }
+
+                else if (cellnumber==16)
+                {
+                    matrica16[e.RowIndex, e.ColumnIndex] = Convert.ToInt32(cell.Value);
+                }
+
+                bool gotovo = check_IfDone();
+                if (gotovo) show_Congratulations();
             }
         }
+
         //promijeni se stil unosa kada je gumb notes kliknut
         private void notes_Click(object sender, EventArgs e)
         {
@@ -475,12 +516,58 @@ namespace Sudoku
                 on = false;
             }
         }
+
         //računanje vremena
         void t_Tick(object sender, EventArgs e)
         {
             timeElapsed += t.Interval;
             TimeSpan timespan = TimeSpan.FromMilliseconds(timeElapsed);
             time.Text = "Time: " + timespan.ToString(@"mm\:ss");
+        }
+
+        //uspoređuje generiranu matricu i matricu iz igre
+        private bool check_IfDone()
+        {
+            if (cellnumber == 9 && matrica9.Cast<int>().SequenceEqual(gmatrica9.Cast<int>())) return true;
+            else if (cellnumber == 16 && matrica16.Cast<int>().SequenceEqual(gmatrica16.Cast<int>())) return true;
+            else return false;
+        }
+
+        //čestitke ako korisnik pobijedi
+        private void show_Congratulations()
+        {
+            clear_All();
+            this.label1.Visible = false;
+
+            congratsp = new PictureBox();
+            congratsp.Name = "congratsp";
+            congratsp.Size = new Size(1280, 750);
+            congratsp.Location = new Point(this.label1.Location.X - 400, this.label1.Location.Y);
+            congratsp.Image = Properties.Resources.fireworks;
+            this.Controls.Add(congratsp);
+
+            congratsl = new Label();
+            congratsl.Name = "congratsl";
+            congratsl.Text = "CONGRATULATIONS\nYOU WON!";
+            congratsl.Location = new Point(this.label1.Location.X, this.label1.Location.Y - 100);
+            congratsl.Size = this.button1.Size;
+            congratsl.AutoSize = true;
+            congratsl.BackColor = Color.Black;
+            congratsl.ForeColor = Color.DarkRed;
+            congratsl.Font = new Font("Algerian", 32);
+            congratsl.TextAlign = ContentAlignment.MiddleCenter;
+            this.Controls.Add(congratsl);
+        }
+
+        //generiranje igre
+        private void generate_sudoku9(object sender) //sender nam treba da vidimo koje je težine
+        {
+
+        }
+
+        private void generate_sudoku16()
+        {
+
         }
     }
 }
