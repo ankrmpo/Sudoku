@@ -1,4 +1,28 @@
-﻿using System;
+﻿/* MUST READ BEFORE USE:
+ * Što se normanih levela tiče, bilješke ne rade savršeno, tj brojevi pišu jedan do drugoga umjesto s razmakom
+ * jer mi se pojavljivao Stack Overflow kad sam pokušala samo dodati razmak i novu bilješku. Zato se i sve izbriše
+ * kad se ponovno ide unosit vrijednost u tu ćeliju.
+ * Napravila sam tri tipa matrice matrica, gmatrica i pgmatrica. Mislila sam da u gmatricu stavimo generirani
+ * riješeni sudoku, pa onda u pgmatricu postavimo svugdje 0 osim na mjestima koje ćemo ostavit otkrivenima na
+ * početku igre. A matrica je onda matrica igre, u nju idu ta otkrivena polja i ona koja mi unosimo.
+ * Za 9x9 sam stavila da su matrice tipa int, a 16x16 string zbog slova koja možemo unosit.
+ * Onda se tijekom igre uspoređuju matrica i gmatrica nakon svake promjene vrijednosti ćelije i igra završava
+ * kad su jednake, ali ne čim unesemo zadnju točnu vrijednost nego treba još jednom kliknut zbog funkcije u kojoj
+ * je to napravljeno (jebiga, nisam znala drukčije).
+ * To bi sve trebalo radit i za killer sudoku jer samo kad generiramo matricu treba onda nekako označiti ta polja
+ * u kojima će biti sume.
+ * A samurai je sjeban jer imamo 5 datagridview-ova. Morale bismo nekako restringirati da se samo jedno polje u tih
+ * 5 različitih može označiti u jednom trenutku što je problematično jer ispada da svaki datagridview mora imati
+ * defaultno polje koje je na početku označeno. To je ovo polje crvene boje u ostalim levelima, a nema ga u samurai
+ * jer sam samo postavila da je boje pozadine. Inače bi vidjela više crvenih polja u isto vrijeme.
+ * Još veći problem je taj jedan koji se preklapa s ostalima. Uopće ne znam kak bismo to mogle brzo i jednostavno
+ * smislit.
+ * Pitanja? XD
+ */
+
+
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -28,14 +52,18 @@ namespace Sudoku
         private int timeElapsed;
         private bool on;
         private Label congratsl;
+        private Label congratst;
         private PictureBox congratsp;
 
         //matrice igre
         private int[,] matrica9;
-        private int[,] matrica16;
-        //generirane matrice
+        private string[,] matrica16;
+
+        //generirane matrice, pg će biti pomoćne u kojima će sve vrijednosti biti 0, osim onih koje se pojavljuju na početku sudokua
         private int[,] gmatrica9;
-        private int[,] gmatrica16;
+        private int[,] pgmatrica9;
+        private string[,] gmatrica16;
+        private string[,] pgmatrica16;
 
         public Form1()
         {
@@ -50,9 +78,11 @@ namespace Sudoku
             timeElapsed = 0;
 
             matrica9 = new int[9, 9];
-            matrica16 = new int[16, 16];
+            matrica16 = new string[16, 16];
             gmatrica9 = new int[9, 9];
-            gmatrica16 = new int[16, 16];
+            gmatrica16 = new string[16, 16];
+            pgmatrica9 = new int[9, 9];
+            pgmatrica16 = new string[16, 16];
 
             InitializeComponent();
             DoubleBuffered = true; //za smanjenje grafičkih smetnji
@@ -72,7 +102,7 @@ namespace Sudoku
             grid.DefaultCellStyle.BackColor = Color.WhiteSmoke;
             grid.DefaultCellStyle.SelectionBackColor = Color.Crimson;
             grid.ScrollBars = ScrollBars.None;
-            grid.Font = new Font("Calibri", 16.2F, FontStyle.Bold, GraphicsUnit.Point, ((byte)(0)));
+            grid.Font = new Font("Calibri", 16F, FontStyle.Bold);
             grid.ForeColor = Color.DarkRed;
             grid.SelectionMode = DataGridViewSelectionMode.CellSelect;
             grid.EditingControlShowing += new DataGridViewEditingControlShowingEventHandler(grid_EditingControlShowing);
@@ -115,21 +145,24 @@ namespace Sudoku
 
             if(t.Enabled == true) t.Stop();
             this.Controls.Remove(time);
-            timeElapsed = 0;
 
             Array.Clear(matrica9, 0, matrica9.Length);
             Array.Clear(matrica16, 0, matrica16.Length);
             Array.Clear(gmatrica9, 0, gmatrica9.Length);
             Array.Clear(gmatrica16, 0, gmatrica16.Length);
+            Array.Clear(pgmatrica9, 0, pgmatrica9.Length);
+            Array.Clear(pgmatrica16, 0, pgmatrica16.Length);
 
             this.label1.Visible = true;
             this.Controls.Remove(congratsl);
+            this.Controls.Remove(congratst);
             this.Controls.Remove(congratsp);
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
             clear_All();
+            timeElapsed = 0;
 
             int x = 0;
             for (int i = 0; i < 4; ++i)
@@ -341,11 +374,11 @@ namespace Sudoku
             {
                 generate_sudoku16(); //generiramo sudoku igru 16x16
                 initialize_NewGrid("grid");
-                cellwidth = 35;
-                cellheight = 35;
+                cellwidth = 42;
+                cellheight = 42;
                 cellnumber = 16;
                 this.label1.Visible = false;
-                grid.Location = new Point(this.label1.Location.X - 100, this.button1.Location.Y - 300);
+                grid.Location = new Point(this.label1.Location.X - 120, this.button1.Location.Y - 350);
                 start_NormalGame();
             }
 
@@ -386,6 +419,12 @@ namespace Sudoku
                 row.Height = cellheight;
                 grid.Rows.Add(row);
             }
+            for (int i = 0; i < cellnumber; ++i)
+                for (int j = 0; j < cellnumber; ++j)
+                {
+                    if (cellnumber == 9 && pgmatrica9[i, j] != 0) grid.Rows[i].Cells[j].Value = pgmatrica9[i, j];
+                    else if (cellnumber == 16 && pgmatrica16[i, j] != "0") grid.Rows[i].Cells[j].Value = pgmatrica16[i, j];
+                }
             //podebljanje 3x3 odnosno 4x4 podtablica u tablici
             if (cellnumber == 9)
             {
@@ -471,6 +510,23 @@ namespace Sudoku
                     return;
                 }
             }
+
+            if (on) //ako su uključene bilješke, onda samo želimo zapisati moguće vrijednosti, ne spremamo u matricu
+            {
+                foreach (DataGridViewTextBoxColumn column in grid.Columns)
+                {
+                    column.MaxInputLength = 3;
+                }
+            }
+            else if (!on)
+            {
+                grid.Font = new Font("Calibri", 16F, FontStyle.Bold);
+                grid.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                foreach (DataGridViewTextBoxColumn column in grid.Columns)
+                {
+                    column.MaxInputLength = 1;
+                }
+            }
         }
 
         //spremanje unešenih podataka u matrice i provjera je li igra gotova
@@ -479,26 +535,26 @@ namespace Sudoku
             DataGridView grid = (sender as DataGridView);
             DataGridViewCell cell = grid.Rows[e.RowIndex].Cells[e.ColumnIndex];
 
-            if (on) //ako su uključene bilješke, onda samo želimo zapisati moguće vrijednosti, ali ih ne spremamo
+            if (!on) //odlučili smo se za vrijednost, spremamo je u matricu
             {
-                //dopustiti unos više vrijednosti u jednu ćeliju
-            }
-
-            else //odlučili smo se za vrijednost, spremamo je u matricu
-            {
-                //dopustiti samo jednu vrijednost u svaku ćeliju, to je defaultno
+                cell.Style.Font = new Font("Calibri", 16F, FontStyle.Bold);
                 if (cellnumber == 9)
                 {
                     matrica9[e.RowIndex, e.ColumnIndex] = Convert.ToInt32(cell.Value);
                 }
 
-                else if (cellnumber==16)
+                else if (cellnumber == 16)
                 {
-                    matrica16[e.RowIndex, e.ColumnIndex] = Convert.ToInt32(cell.Value);
+                    matrica16[e.RowIndex, e.ColumnIndex] = cell.Value.ToString();
                 }
 
                 bool gotovo = check_IfDone();
                 if (gotovo) show_Congratulations();
+            }
+
+            else if(on) //ne spremamo
+            {
+                cell.Style.Font = new Font("Calibri", 13F);
             }
         }
 
@@ -529,7 +585,7 @@ namespace Sudoku
         private bool check_IfDone()
         {
             if (cellnumber == 9 && matrica9.Cast<int>().SequenceEqual(gmatrica9.Cast<int>())) return true;
-            else if (cellnumber == 16 && matrica16.Cast<int>().SequenceEqual(gmatrica16.Cast<int>())) return true;
+            else if (cellnumber == 16 && matrica16.Cast<string>().SequenceEqual(gmatrica16.Cast<string>())) return true;
             else return false;
         }
 
@@ -541,15 +597,15 @@ namespace Sudoku
 
             congratsp = new PictureBox();
             congratsp.Name = "congratsp";
-            congratsp.Size = new Size(1280, 750);
-            congratsp.Location = new Point(this.label1.Location.X - 400, this.label1.Location.Y);
+            congratsp.Size = new Size(800, 533);
+            congratsp.Location = new Point(this.label1.Location.X - 200, this.label1.Location.Y + 50);
             congratsp.Image = Properties.Resources.fireworks;
             this.Controls.Add(congratsp);
 
             congratsl = new Label();
             congratsl.Name = "congratsl";
-            congratsl.Text = "CONGRATULATIONS\nYOU WON!";
-            congratsl.Location = new Point(this.label1.Location.X, this.label1.Location.Y - 100);
+            congratsl.Text = "CONGRATULATIONS,\nYOU WON!";
+            congratsl.Location = new Point(this.label1.Location.X, 70);
             congratsl.Size = this.button1.Size;
             congratsl.AutoSize = true;
             congratsl.BackColor = Color.Black;
@@ -557,12 +613,25 @@ namespace Sudoku
             congratsl.Font = new Font("Algerian", 32);
             congratsl.TextAlign = ContentAlignment.MiddleCenter;
             this.Controls.Add(congratsl);
+
+            congratst = new Label();
+            congratst.Name = "congratst";
+            TimeSpan timespan = TimeSpan.FromMilliseconds(timeElapsed);
+            congratst.Text = "YOUR TIME: " + timespan.ToString(@"mm\:ss");
+            congratst.Location = new Point(congratsp.Location.X, congratsp.Location.Y + congratsp.Size.Height + 10);
+            congratst.Size = this.button1.Size;
+            congratst.AutoSize = true;
+            congratst.BackColor = Color.Black;
+            congratst.ForeColor = Color.DarkRed;
+            congratst.Font = new Font("Algerian", 32);
+            congratst.TextAlign = ContentAlignment.MiddleCenter;
+            this.Controls.Add(congratst);
         }
 
         //generiranje igre
         private void generate_sudoku9(object sender) //sender nam treba da vidimo koje je težine
         {
-
+          
         }
 
         private void generate_sudoku16()
