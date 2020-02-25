@@ -43,6 +43,7 @@ namespace Sudoku
         private int cellwidth;
         private int cellheight;
         private int cellnumber;
+        private int solutions = 0; // varijabla kojom provjeravamo jedinstvenost rjesenja sudokua
 
         //gumbi i labeli za vrijeme, bilješke i kraj igre
         private Button notesb;
@@ -65,6 +66,10 @@ namespace Sudoku
         private string[,] gmatrica16;
         private string[,] pgmatrica16;
 
+        //matrice biljeski
+        private int[,,] notes9;
+        private string[,,] notes16;
+
         public Form1()
         {
             levels = new List<Button>();
@@ -83,6 +88,8 @@ namespace Sudoku
             gmatrica16 = new string[16, 16];
             pgmatrica9 = new int[9, 9];
             pgmatrica16 = new string[16, 16];
+            notes9 = new int[9, 9, 9];
+            notes16 = new string[16, 16, 16];
 
             InitializeComponent();
             DoubleBuffered = true; //za smanjenje grafičkih smetnji
@@ -362,18 +369,6 @@ namespace Sudoku
             if (gumb.Name == "easy" || gumb.Name == "medium" || gumb.Name == "hard" || gumb.Name == "killer") //one sve imaju tablicu 9x9
             {
                 generate_sudoku9(sender); //generiramo sudoku igru 9x9 ovisno o težini
-
-                // Test
-                //for (int r = 0; r < 9; ++r)
-                //{
-                //    for (int c = 0; c < 9; ++c)
-                //    {
-                //        System.Console.Write(gmatrica9[r, c]);
-                //        System.Console.Write("\t");
-                //    }
-                //    System.Console.Write("\n");
-                //}
-
                 initialize_NewGrid("grid");
                 cellwidth = 45;
                 cellheight = 45;
@@ -535,7 +530,7 @@ namespace Sudoku
             {
                 foreach (DataGridViewTextBoxColumn column in grid.Columns)
                 {
-                    column.MaxInputLength = 3;
+                    column.MaxInputLength = 9;
                 }
             }
             else if (!on)
@@ -572,9 +567,9 @@ namespace Sudoku
                 if (gotovo) show_Congratulations();
             }
 
-            else if(on) //ne spremamo
+            else if (on) //ne spremamo
             {
-                cell.Style.Font = new Font("Calibri", 13F);
+                cell.Style.Font = new Font("Calibri", 5F);
             }
         }
 
@@ -659,14 +654,14 @@ namespace Sudoku
             string difficulty = (sender as Button).Text;
 
             if (difficulty == "EASY")
-                generateUnsolvedSudoku9(20);
+                generateUnsolvedSudoku9(40);
             if (difficulty == "MEDIUM")
-                generateUnsolvedSudoku9(25);
+                generateUnsolvedSudoku9(50);
             if (difficulty == "HARD")
-                generateUnsolvedSudoku9(30);
+                generateUnsolvedSudoku9(60);
         }
 
-        private void generateUnsolvedSudoku9(int blanks)
+        private void generateUnsolvedSudoku9(int blanks) // prazni polja
         {
             for(int i = 0; i < 9; ++i)
             {
@@ -685,9 +680,9 @@ namespace Sudoku
                     r = rnd.Next(0, 9);
                     c = rnd.Next(0, 9);
                 }
-                while (pgmatrica9[r, c] == 0 || pgmatrica9[8 - r, 8 - c] == 0);
+                while (pgmatrica9[r,c] == 0);
 
-                pgmatrica9[r, c] = pgmatrica9[8 - r, 8 - c] = 0;
+                pgmatrica9[r, c] = 0;
             }
         }
 
@@ -714,7 +709,7 @@ namespace Sudoku
                         Random rnd = new Random();
                         num = rnd.Next(1, 10);
                     }
-                    while (valueInSquare9(num, row, column));
+                    while (valueInSquare9(num, row, column, gmatrica9));
 
                     gmatrica9[row + i, column + j] = num;
                 }
@@ -729,7 +724,9 @@ namespace Sudoku
                 j = 0;
             }
             if (i >= 9 && j >= 9)
+            {
                 return true;
+            }
 
             if(i < 3)
             {
@@ -748,13 +745,15 @@ namespace Sudoku
                     i = i + 1;
                     j = 0;
                     if (i >= 9)
+                    {
                         return true;
+                    } 
                 }
             }
 
             for(int num = 1; num <= 9; ++num)
             {
-                if(!valueInRow9(num, i) && !valueInColumn9(num, j) && !valueInSquare9(num, i, j))
+                if(!valueInRow9(num, i, gmatrica9) && !valueInColumn9(num, j, gmatrica9) && !valueInSquare9(num, i, j, gmatrica9))
                 {
                     gmatrica9[i, j] = num;
                     if (generateRemaining9(i, j + 1))
@@ -766,29 +765,29 @@ namespace Sudoku
 
             return false;
         }
-        private bool valueInRow9(int val, int r)
+        private bool valueInRow9(int val, int r, int[,] matrica)
         {
             int column;
 
             for(column = 0; column < 9; ++column)
-                if (gmatrica9[r, column] == val)
+                if (matrica[r, column] == val)
                     return true;
 
             return false;
         }
 
-        private bool valueInColumn9(int val, int c)
+        private bool valueInColumn9(int val, int c, int[,] matrica)
         {
             int row;
 
             for (row = 0; row < 9; ++row)
-                if (gmatrica9[row, c] == val)
+                if (matrica[row, c] == val)
                     return true;
 
             return false;
         }
 
-        private bool valueInSquare9(int val, int r, int c)
+        private bool valueInSquare9(int val, int r, int c, int[,] matrica)
         {
             int i, j;
 
@@ -796,74 +795,74 @@ namespace Sudoku
             {
                 for (i = 0; i < 3; ++i)
                     for (j = 0; j < 3; ++j)
-                        if (gmatrica9[i, j] == val)
+                        if (matrica[i, j] == val)
                             return true;
             }
             else if(r < 3 && c >= 3 && c < 6) // Drugi kvadrat
             {
                 for (i = 0; i < 3; ++i)
                     for (j = 3; j < 6; ++j)
-                        if (gmatrica9[i, j] == val)
+                        if (matrica[i, j] == val)
                             return true;
             }
             else if (r < 3 && c >= 6 && c < 9) // Treci kvadrat
             {
                 for (i = 0; i < 3; ++i)
                     for (j = 6; j < 9; ++j)
-                        if (gmatrica9[i, j] == val)
+                        if (matrica[i, j] == val)
                             return true;
             }
             else if (r >= 3 && r < 6 && c < 3) // Cetvrti kvadrat
             {
                 for (i = 3; i < 6; ++i)
                     for (j = 0; j < 3; ++j)
-                        if (gmatrica9[i, j] == val)
+                        if (matrica[i, j] == val)
                             return true;
             }
             else if (r >= 3 && r < 6 && c >= 3 && c < 6) // Peti kvadrat
             {
                 for (i = 3; i < 6; ++i)
                     for (j = 3; j < 6; ++j)
-                        if (gmatrica9[i, j] == val)
+                        if (matrica[i, j] == val)
                             return true;
             }
             else if (r >= 3 && r < 6 && c >= 6 && c < 9) // Sesti kvadrat
             {
                 for (i = 3; i < 6; ++i)
                     for (j = 6; j < 9; ++j)
-                        if (gmatrica9[i, j] == val)
+                        if (matrica[i, j] == val)
                             return true;
             }
             else if (r >= 6 && r < 9 && c < 3) // Sedmi kvadrat
             {
                 for (i = 6; i < 9; ++i)
                     for (j = 0; j < 3; ++j)
-                        if (gmatrica9[i, j] == val)
+                        if (matrica[i, j] == val)
                             return true;
             }
             else if (r >= 6 && r < 9 && c >= 3 && c < 6) // Osmi kvadrat
             {
                 for (i = 6; i < 9; ++i)
                     for (j = 3; j < 6; ++j)
-                        if (gmatrica9[i, j] == val)
+                        if (matrica[i, j] == val)
                             return true;
             }
             else if (r >= 6 && r < 9 && c >= 6 && c < 9) // Deveti kvadrat
             {
                 for (i = 6; i < 9; ++i)
                     for (j = 6; j < 9; ++j)
-                        if (gmatrica9[i, j] == val)
+                        if (matrica[i, j] == val)
                             return true;
             }
 
             return false;
         }
 
-        private bool matrixFull9()
+        private bool matrixFull9(int[,] matrica)
         {
             for (int i = 0; i < 9; ++i)
                 for (int j = 0; j < 9; ++j)
-                    if (gmatrica9[i, j] == 0)
+                    if (matrica[i, j] == 0)
                         return false;
 
             return true;
