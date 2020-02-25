@@ -422,8 +422,16 @@ namespace Sudoku
             for (int i = 0; i < cellnumber; ++i)
                 for (int j = 0; j < cellnumber; ++j)
                 {
-                    if (cellnumber == 9 && pgmatrica9[i, j] != 0) grid.Rows[i].Cells[j].Value = pgmatrica9[i, j];
-                    else if (cellnumber == 16 && pgmatrica16[i, j] != "0") grid.Rows[i].Cells[j].Value = pgmatrica16[i, j];
+                    if (cellnumber == 9 && pgmatrica9[i, j] != 0)
+                    {
+                        grid.Rows[i].Cells[j].Value = pgmatrica9[i, j];
+                        grid.Rows[i].Cells[j].ReadOnly = true;
+                    }
+                    else if (cellnumber == 16 && pgmatrica16[i, j] != "0")
+                    {
+                        grid.Rows[i].Cells[j].Value = pgmatrica16[i, j];
+                        grid.Rows[i].Cells[j].ReadOnly = true;
+                    }
                 }
             //podebljanje 3x3 odnosno 4x4 podtablica u tablici
             if (cellnumber == 9)
@@ -631,7 +639,7 @@ namespace Sudoku
         //generiranje igre
         private void generate_sudoku9(object sender) //sender nam treba da vidimo koje je težine
         {
-          
+
         }
 
         private void generate_sudoku16()
