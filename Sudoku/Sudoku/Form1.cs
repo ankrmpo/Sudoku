@@ -364,15 +364,15 @@ namespace Sudoku
                 generate_sudoku9(sender); //generiramo sudoku igru 9x9 ovisno o težini
 
                 // Test
-                for (int r = 0; r < 9; ++r)
-                {
-                    for (int c = 0; c < 9; ++c)
-                    {
-                        System.Console.Write(gmatrica9[r, c]);
-                        System.Console.Write("\t");
-                    }
-                    System.Console.Write("\n");
-                }
+                //for (int r = 0; r < 9; ++r)
+                //{
+                //    for (int c = 0; c < 9; ++c)
+                //    {
+                //        System.Console.Write(gmatrica9[r, c]);
+                //        System.Console.Write("\t");
+                //    }
+                //    System.Console.Write("\n");
+                //}
 
                 initialize_NewGrid("grid");
                 cellwidth = 45;
@@ -656,6 +656,39 @@ namespace Sudoku
             generateDiagonals9();
             generateRemaining9(0, 3);
 
+            string difficulty = (sender as Button).Text;
+
+            if (difficulty == "EASY")
+                generateUnsolvedSudoku9(20);
+            if (difficulty == "MEDIUM")
+                generateUnsolvedSudoku9(25);
+            if (difficulty == "HARD")
+                generateUnsolvedSudoku9(30);
+        }
+
+        private void generateUnsolvedSudoku9(int blanks)
+        {
+            for(int i = 0; i < 9; ++i)
+            {
+                for(int j = 0; j < 9; ++j)
+                {
+                    pgmatrica9[i, j] = gmatrica9[i, j];
+                }
+            }
+
+            int r, c;
+            for(int i = 0; i < blanks; ++i)
+            {
+                do
+                {
+                    Random rnd = new Random();
+                    r = rnd.Next(0, 9);
+                    c = rnd.Next(0, 9);
+                }
+                while (pgmatrica9[r, c] == 0 || pgmatrica9[8 - r, 8 - c] == 0);
+
+                pgmatrica9[r, c] = pgmatrica9[8 - r, 8 - c] = 0;
+            }
         }
 
         private void generate_sudoku16()
