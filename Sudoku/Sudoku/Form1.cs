@@ -37,9 +37,8 @@ namespace Sudoku
     public partial class Form1 : Form
     {
         private List<Button> levels; //gumbi za odabir osnovnih težina
-        private List<Button> slevels; //gumbi za odabir posebnih težina
         private DataGridView grid; //sudoku
-        private List<DataGridView> grids; //sudoku grid za samurai
+
         private int cellwidth;
         private int cellheight;
         private int cellnumber;
@@ -65,11 +64,12 @@ namespace Sudoku
         private string[,] gmatrica16;
         private string[,] pgmatrica16;
 
+        private string biljeske;
+
         public Form1()
         {
             levels = new List<Button>();
-            slevels = new List<Button>();
-            grids = new List<DataGridView>();
+
             t = new Timer();
 
             cellwidth = 45;
@@ -122,22 +122,9 @@ namespace Sudoku
                 }
             }
 
-            for (int i = 0; i < slevels.Count; ++i)
-            {
-                Button btn2 = slevels[i];
-
-                if (this.Controls.Contains(btn2))
-                {
-                    this.Controls.Remove(btn2);
-                }
-            }
-
             levels.Clear();
-            slevels.Clear();
 
             this.Controls.Remove(grid);
-            for (int i = 0; i < grids.Count; ++i)
-                this.Controls.Remove(grids[i]);
 
             this.Controls.Remove(notesb);
             this.Controls.Remove(notesl);
@@ -157,6 +144,8 @@ namespace Sudoku
             this.Controls.Remove(congratsl);
             this.Controls.Remove(congratst);
             this.Controls.Remove(congratsp);
+
+            biljeske = String.Empty;
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -201,12 +190,11 @@ namespace Sudoku
 
                 else
                 {
-                    gumb.Text = "SPECIAL";
-                    gumb.Name = "special";
+                    gumb.Text = "16x16";
+                    gumb.Name = "16";
                 }
                 
-                if (i < 3) gumb.Click += new EventHandler(gumb_Click);
-                else gumb.Click += new EventHandler(gumb_SpecialClick);
+                gumb.Click += new EventHandler(gumb_Click);
                 gumb.MouseEnter += new EventHandler(gumb_MouseEnter);
                 gumb.MouseLeave += new EventHandler(gumb_MouseLeave);
                 this.Controls.Add(gumb);
@@ -238,64 +226,6 @@ namespace Sudoku
         {
             clear_All();
             start_Game(sender);
-        }
-
-        private void gumb_SpecialClick(object sender, EventArgs e)
-        {
-            clear_All();
-            show_SpecialLevels();
-        }
-
-        private void show_SpecialLevels() //prikazuje posebne levele
-        {
-            clear_All();
-            int x = 0;
-            for (int i = 0; i < 4; ++i)
-            {
-                Button gumb = new Button();
-                slevels.Add(gumb);
-                gumb.Size = this.button1.Size;
-                if (i == 3) gumb.Location = new Point(slevels[1].Location.X, this.button2.Location.Y);
-                else gumb.Location = new Point(600 + x, this.button1.Location.Y);
-                x += gumb.Size.Width + 10;
-                gumb.AutoSize = false;
-                gumb.BackColor = Color.Black;
-                gumb.ForeColor = Color.DarkRed;
-                gumb.FlatAppearance.BorderColor = Color.DarkRed;
-                gumb.FlatAppearance.BorderSize = 5;
-                gumb.FlatStyle = FlatStyle.Flat;
-                gumb.Font = new Font("Algerian", 22);
-
-                if (i == 0)
-                {
-                    gumb.Text = "KILLER";
-                    gumb.Name = "killer";
-                }
-
-                else if (i == 1)
-                {
-                    gumb.Text = "SAMURAI";
-                    gumb.Name = "samurai";
-                }
-
-                else if (i == 2)
-                {
-                    gumb.Text = "16x16";
-                    gumb.Name = "16";
-                }
-
-                else if (i == 3)
-                {
-                    gumb.Text = "BACK";
-                    gumb.Name = "back";
-                }
-
-                if (i == 3) gumb.Click += new EventHandler(button1_Click);
-                else gumb.Click += new EventHandler(gumb_Click);
-                gumb.MouseEnter += new EventHandler(gumb_MouseEnter);
-                gumb.MouseLeave += new EventHandler(gumb_MouseLeave);
-                this.Controls.Add(gumb);
-            }
         }
 
         private void initialize_Notes() //stvara label i gumb za bilješke
@@ -359,7 +289,7 @@ namespace Sudoku
 
             Button gumb = (sender as Button);
 
-            if (gumb.Name == "easy" || gumb.Name == "medium" || gumb.Name == "hard" || gumb.Name == "killer") //one sve imaju tablicu 9x9
+            if (gumb.Name == "easy" || gumb.Name == "medium" || gumb.Name == "hard") //one sve imaju tablicu 9x9
             {
                 generate_sudoku9(sender); //generiramo sudoku igru 9x9 ovisno o težini
 
@@ -392,24 +322,7 @@ namespace Sudoku
                 this.label1.Visible = false;
                 grid.Location = new Point(this.label1.Location.X - 120, this.button1.Location.Y - 350);
                 start_NormalGame();
-            }
-
-            else if (gumb.Name == "samurai") //samurai grid, 5 tablica 9x9
-            {
-                cellwidth = 30;
-                cellheight = 30;
-                cellnumber = 9;
-                this.label1.Visible = false;
-                for (int j = 0; j < 5; ++j)
-                {
-                    string name = "grid" + j.ToString();
-                    DataGridView grid = initialize_NewGrid(name);
-                    grids.Add(grid);
-                }
-               
-                start_SamuraiGame();
-            }
-  
+            }  
         }
 
         private void start_NormalGame()
@@ -431,6 +344,7 @@ namespace Sudoku
                 row.Height = cellheight;
                 grid.Rows.Add(row);
             }
+
             for (int i = 0; i < cellnumber; ++i)
                 for (int j = 0; j < cellnumber; ++j)
                 {
@@ -467,46 +381,6 @@ namespace Sudoku
             Controls.Add(grid);
         }
 
-        private void start_SamuraiGame()
-        {
-            Size size = new Size(cellwidth * cellnumber, cellwidth * cellnumber);
-
-            grids[0].Location = new Point(this.label1.Location.X - 200, this.button1.Location.Y - 350);
-            grids[1].Location = new Point(grids[0].Location.X + size.Width + 3 * cellwidth, grids[0].Location.Y);
-            grids[2].Location = new Point(grids[0].Location.X + 6 * cellwidth, grids[0].Location.Y + 6 * cellwidth);
-            grids[3].Location = new Point(grids[0].Location.X, grids[0].Location.Y + size.Width + 3 * cellwidth);
-            grids[4].Location = new Point(grids[1].Location.X, grids[3].Location.Y);
-
-            notesl.Location = new Point(grids[0].Location.X, grids[4].Location.Y + size.Height + 20);
-            notesb.Location = new Point(notesl.Location.X + notesl.Size.Width + 5, notesl.Location.Y);
-            time.Location = new Point(notesl.Location.X, notesl.Location.Y + notesl.Size.Height + 5);
-
-            for (int i = 0; i < grids.Count; ++i)
-            {
-                grids[i].Size = size;
-                for (int j = 0; j < cellnumber; ++j)
-                {
-                    DataGridViewTextBoxColumn text = new DataGridViewTextBoxColumn();
-                    text.MaxInputLength = 1;
-                    grids[i].Columns.Add(text);
-                    grids[i].Columns[j].Name = (i + 1).ToString() + (j + 1).ToString();
-                    grids[i].Columns[j].Width = cellwidth;
-                    grids[i].Columns[j].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-                    DataGridViewRow row = new DataGridViewRow();
-                    row.Height = cellheight;
-                    grids[i].Rows.Add(row);
-                }
-
-                grids[i].DefaultCellStyle.SelectionBackColor = Color.WhiteSmoke;
-                grids[i].Columns[2].DividerWidth = 2;
-                grids[i].Columns[5].DividerWidth = 2;
-                grids[i].Rows[2].DividerHeight = 2;
-                grids[i].Rows[5].DividerHeight = 2;
-
-                Controls.Add(grids[i]);
-            }                
-        }
-
         //ne smijemo dopustiti unos nekih slova
         private void grid_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
         {
@@ -535,8 +409,12 @@ namespace Sudoku
             {
                 foreach (DataGridViewTextBoxColumn column in grid.Columns)
                 {
-                    column.MaxInputLength = 3;
+                    column.MaxInputLength = cellnumber;
                 }
+
+                biljeske += e.KeyChar.ToString();
+                if (biljeske.Length != 5 && biljeske.Length != 11) biljeske += " ";
+                else biljeske += "\n";
             }
             else if (!on)
             {
@@ -558,6 +436,7 @@ namespace Sudoku
             if (!on) //odlučili smo se za vrijednost, spremamo je u matricu
             {
                 cell.Style.Font = new Font("Calibri", 16F, FontStyle.Bold);
+                cell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
                 if (cellnumber == 9)
                 {
                     matrica9[e.RowIndex, e.ColumnIndex] = Convert.ToInt32(cell.Value);
@@ -574,7 +453,11 @@ namespace Sudoku
 
             else if(on) //ne spremamo
             {
-                cell.Style.Font = new Font("Calibri", 13F);
+                cell.Style.Font = new Font("Calibri", 9.5F);
+                cell.Style.Alignment = DataGridViewContentAlignment.TopLeft;
+                cell.Style.WrapMode = DataGridViewTriState.True;
+                cell.Value = biljeske;
+                biljeske = String.Empty;
             }
         }
 
