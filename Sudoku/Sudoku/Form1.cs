@@ -42,7 +42,6 @@ namespace Sudoku
         private int cellwidth;
         private int cellheight;
         private int cellnumber;
-        private int solutions = 0; // varijabla kojom provjeravamo jedinstvenost rjesenja sudokua
 
         //gumbi i labeli za vrijeme, bilješke i kraj igre
         private Button notesb;
@@ -342,7 +341,7 @@ namespace Sudoku
                         grid.Rows[i].Cells[j].Value = pgmatrica9[i, j];
                         grid.Rows[i].Cells[j].ReadOnly = true;
                     }
-                    else if (cellnumber == 16 && pgmatrica16[i, j] != "0")
+                    else if (cellnumber == 16 && pgmatrica16[i, j] != "")
                     {
                         grid.Rows[i].Cells[j].Value = pgmatrica16[i, j];
                         grid.Rows[i].Cells[j].ReadOnly = true;
@@ -565,13 +564,47 @@ namespace Sudoku
 
         private void generate_sudoku16()
         {
+            generateDiagonals16();
+            generateRemaining16(0, 4);
 
+            generateUnsolvedSudoku16(100);
+        }
+
+        private void generateUnsolvedSudoku16(int blanks) // prazni polja
+        {
+            for (int i = 0; i < 16; ++i)
+            {
+                for (int j = 0; j < 16; ++j)
+                {
+                    pgmatrica16[i, j] = gmatrica16[i, j];
+                }
+            }
+
+            int r, c;
+            for (int i = 0; i < blanks; ++i)
+            {
+                do
+                {
+                    Random rnd = new Random();
+                    r = rnd.Next(0, 16);
+                    c = rnd.Next(0, 16);
+                }
+                while (pgmatrica16[r, c] == "");
+
+                pgmatrica16[r, c] = "";
+            }
         }
 
         private void generateDiagonals9()
         {
             for(int i = 0; i < 9; i = i + 3)
                 fillSquare9(i, i);
+        }
+
+        private void generateDiagonals16()
+        {
+            for (int i = 0; i < 16; i = i + 4)
+                fillSquare16(i, i);
         }
 
         private void fillSquare9(int row, int column)
@@ -592,7 +625,27 @@ namespace Sudoku
                 }
             }
         }
-        
+
+        private void fillSquare16(int row, int column)
+        {
+            string[] values = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G" };
+            int num;
+            for (int i = 0; i < 4; ++i)
+            {
+                for (int j = 0; j < 4; ++j)
+                {
+                    do
+                    {
+                        Random rnd = new Random();
+                        num = rnd.Next(0, 16);
+                    }
+                    while (valueInSquare16(values[num], row, column, gmatrica16));
+                    
+                    gmatrica16[row + i, column + j] = values[num];
+                }
+            }
+        }
+
         private bool generateRemaining9(int i, int j)
         {
             if(j >= 9 && i < 8)
@@ -642,6 +695,59 @@ namespace Sudoku
 
             return false;
         }
+
+        private bool generateRemaining16(int i, int j)
+        {
+            if (j >= 16 && i < 15)
+            {
+                ++i;
+                j = 0;
+            }
+            if (i >= 16 && j >= 16)
+            {
+                return true;
+            }
+
+            if (i < 4)
+            {
+                if (j < 4)
+                    j = 4;
+            }
+            else if (i < 12)
+            {
+                if (j == (int)(i / 4) * 4)
+                    j = j + 4;
+            }
+            else
+            {
+                if (j == 12)
+                {
+                    i = i + 1;
+                    j = 0;
+                    if (i >= 16)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            string[] values = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G" };
+
+            for (int num = 0; num < 16; ++num)
+            {
+                if (!valueInRow16(values[num], i, gmatrica16) && !valueInColumn16(values[num], j, gmatrica16) && !valueInSquare16(values[num], i, j, gmatrica16))
+                {
+                    gmatrica16[i, j] = values[num];
+                    if (generateRemaining16(i, j + 1))
+                        return true;
+
+                    gmatrica16[i, j] = "";
+                }
+            }
+
+            return false;
+        }
+
         private bool valueInRow9(int val, int r, int[,] matrica)
         {
             int column;
@@ -653,12 +759,34 @@ namespace Sudoku
             return false;
         }
 
+        private bool valueInRow16(string val, int r, string[,] matrica)
+        {
+            int column;
+
+            for (column = 0; column < 16; ++column)
+                if (val.Equals(matrica[r, column]))
+                    return true;
+
+            return false;
+        }
+
         private bool valueInColumn9(int val, int c, int[,] matrica)
         {
             int row;
 
             for (row = 0; row < 9; ++row)
                 if (matrica[row, c] == val)
+                    return true;
+
+            return false;
+        }
+
+        private bool valueInColumn16(string val, int c, string[,] matrica)
+        {
+            int row;
+
+            for (row = 0; row < 16; ++row)
+                if (val.Equals(matrica[row, c]))
                     return true;
 
             return false;
@@ -729,6 +857,126 @@ namespace Sudoku
                 for (i = 6; i < 9; ++i)
                     for (j = 6; j < 9; ++j)
                         if (matrica[i, j] == val)
+                            return true;
+            }
+
+            return false;
+        }
+
+        private bool valueInSquare16(string val, int r, int c, string[,] matrica)
+        {
+            int i, j;
+
+            if (r < 4 && c < 4) // Prvi kvadrat
+            {
+                for (i = 0; i < 4; ++i)
+                    for (j = 0; j < 4; ++j)
+                        if (val.Equals(matrica[i, j]))
+                            return true;
+            }
+            else if (r < 4 && c >= 4 && c < 8) //Drugi kvadrat
+            {
+                for (i = 0; i < 4; ++i)
+                    for (j = 4; j < 8; ++j)
+                        if (val.Equals(matrica[i, j]))
+                            return true;
+            }
+            else if (r < 4 && c >= 8 && c < 12) //Treci kvadrat
+            {
+                for (i = 0; i < 4; ++i)
+                    for (j = 8; j < 12; ++j)
+                        if (val.Equals(matrica[i, j]))
+                            return true;
+            }
+            else if (r < 4 && c >= 12 && c < 16) //Cetvrti kvadrat
+            {
+                for (i = 0; i < 4; ++i)
+                    for (j = 12; j < 16; ++j)
+                        if (val.Equals(matrica[i, j]))
+                            return true;
+            }
+            else if (r >= 4 && r < 8 && c < 4) //Peti kvadrat
+            {
+                for (i = 4; i < 8; ++i)
+                    for (j = 0; j < 4; ++j)
+                        if (val.Equals(matrica[i, j]))
+                            return true;
+            }
+            else if (r >= 4 && r < 8 && c >= 4 && c < 8) //Sesti kvadrat
+            {
+                for (i = 4; i < 8; ++i)
+                    for (j = 4; j < 8; ++j)
+                        if (val.Equals(matrica[i, j]))
+                            return true;
+            }
+            else if (r >= 4 && r < 8 && c >= 8 && c < 12) //Sedmi kvadrat
+            {
+                for (i = 4; i < 8; ++i)
+                    for (j = 8; j < 12; ++j)
+                        if (val.Equals(matrica[i, j]))
+                            return true;
+            }
+            else if (r >= 4 && r < 8 && c >= 12 && c < 16) //Osmi kvadrat
+            {
+                for (i = 4; i < 8; ++i)
+                    for (j = 12; j < 16; ++j)
+                        if (val.Equals(matrica[i, j]))
+                            return true;
+            }
+            else if (r >= 8 && r < 12 && c < 4) //Deveti kvadrat
+            {
+                for (i = 8; i < 12; ++i)
+                    for (j = 0; j < 4; ++j)
+                        if (val.Equals(matrica[i, j]))
+                            return true;
+            }
+            else if (r >= 8 && r < 12 && c >= 4 && c < 8) //Deseti kvadrat
+            {
+                for (i = 8; i < 12; ++i)
+                    for (j = 4; j < 8; ++j)
+                        if (val.Equals(matrica[i, j]))
+                            return true;
+            }
+            else if (r >= 8 && r < 12 && c >= 8 && c < 12) //Jedanaesti kvadrat
+            {
+                for (i = 8; i < 12; ++i)
+                    for (j = 8; j < 12; ++j)
+                        if (val.Equals(matrica[i, j]))
+                            return true;
+            }
+            else if (r >= 8 && r < 12 && c >= 12 && c < 16) //Dvanaesti kvadrat
+            {
+                for (i = 8; i < 12; ++i)
+                    for (j = 12; j < 16; ++j)
+                        if (val.Equals(matrica[i, j]))
+                            return true;
+            }
+            else if (r >= 12 && r < 16 && c < 4) //Trinaesti kvadrat
+            {
+                for (i = 12; i < 16; ++i)
+                    for (j = 0; j < 4; ++j)
+                        if (val.Equals(matrica[i, j]))
+                            return true;
+            }
+            else if (r >= 12 && r < 16 && c >= 4 && c < 8) //Cetrnaesti kvadrat
+            {
+                for (i = 12; i < 16; ++i)
+                    for (j = 4; j < 8; ++j)
+                        if (val.Equals(matrica[i, j]))
+                            return true;
+            }
+            else if (r >= 12 && r < 16 && c >= 8 && c < 12) //Petnaesti kvadrat
+            {
+                for (i = 12; i < 16; ++i)
+                    for (j = 8; j < 12; ++j)
+                        if (val.Equals(matrica[i, j]))
+                            return true;
+            }
+            else if (r >= 12 && r < 16 && c >= 12 && c < 16) //Sesnaesti kvadrat
+            {
+                for (i = 12; i < 16; ++i)
+                    for (j = 12; j < 16; ++j)
+                        if (val.Equals(matrica[i, j]))
                             return true;
             }
 
