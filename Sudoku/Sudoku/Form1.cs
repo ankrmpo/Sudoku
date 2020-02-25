@@ -651,13 +651,10 @@ namespace Sudoku
         //generiranje igre
         private void generate_sudoku9(object sender) //sender nam treba da vidimo koje je težine
         {
-<<<<<<< HEAD
             // Koristimo bolji algoritam od klasičnog koji backtrackingom puni celiju po celiju redom
             // Ovdje se popune dijagonalni kvadrati, a zatim ostatak rekurzivno
             generateDiagonals9();
             generateRemaining9(0, 3);
-=======
->>>>>>> 157f95dce327af0d2e75be986c431e21383000db
 
         }
 
