@@ -8,3 +8,12 @@ C:\Users\Tamara\Desktop\Faks_Stuff\Diplomski\2.godina\1.semestar\Računarski_pra
 C:\Users\Tamara\Desktop\Faks_Stuff\Diplomski\2.godina\1.semestar\Računarski_praktikum_3\Projekt\Sudoku\Sudoku\Sudoku\obj\Release\Sudoku.exe
 C:\Users\Tamara\Desktop\Faks_Stuff\Diplomski\2.godina\1.semestar\Računarski_praktikum_3\Projekt\Sudoku\Sudoku\Sudoku\obj\Release\Sudoku.pdb
 C:\Users\Tamara\Desktop\Faks_Stuff\Diplomski\2.godina\1.semestar\Računarski_praktikum_3\Projekt\Sudoku\Sudoku\Sudoku\obj\Release\Sudoku.Form1.resources
+C:\Users\Ana\Documents\Faks\Diplomski\2. godina\Zimski semestar\Računarski praktikum 3\Projekt\Sudoku\Sudoku\Sudoku\bin\Release\Sudoku.exe.config
+C:\Users\Ana\Documents\Faks\Diplomski\2. godina\Zimski semestar\Računarski praktikum 3\Projekt\Sudoku\Sudoku\Sudoku\bin\Release\Sudoku.exe
+C:\Users\Ana\Documents\Faks\Diplomski\2. godina\Zimski semestar\Računarski praktikum 3\Projekt\Sudoku\Sudoku\Sudoku\bin\Release\Sudoku.pdb
+C:\Users\Ana\Documents\Faks\Diplomski\2. godina\Zimski semestar\Računarski praktikum 3\Projekt\Sudoku\Sudoku\Sudoku\obj\Release\Sudoku.csprojAssemblyReference.cache
+C:\Users\Ana\Documents\Faks\Diplomski\2. godina\Zimski semestar\Računarski praktikum 3\Projekt\Sudoku\Sudoku\Sudoku\obj\Release\Sudoku.Form1.resources
+C:\Users\Ana\Documents\Faks\Diplomski\2. godina\Zimski semestar\Računarski praktikum 3\Projekt\Sudoku\Sudoku\Sudoku\obj\Release\Sudoku.Properties.Resources.resources
+C:\Users\Ana\Documents\Faks\Diplomski\2. godina\Zimski semestar\Računarski praktikum 3\Projekt\Sudoku\Sudoku\Sudoku\obj\Release\Sudoku.csproj.GenerateResource.cache
+C:\Users\Ana\Documents\Faks\Diplomski\2. godina\Zimski semestar\Računarski praktikum 3\Projekt\Sudoku\Sudoku\Sudoku\obj\Release\Sudoku.exe
+C:\Users\Ana\Documents\Faks\Diplomski\2. godina\Zimski semestar\Računarski praktikum 3\Projekt\Sudoku\Sudoku\Sudoku\obj\Release\Sudoku.pdb
