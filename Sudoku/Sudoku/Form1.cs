@@ -1,28 +1,4 @@
-﻿/* MUST READ BEFORE USE:
- * Što se normanih levela tiče, bilješke ne rade savršeno, tj brojevi pišu jedan do drugoga umjesto s razmakom
- * jer mi se pojavljivao Stack Overflow kad sam pokušala samo dodati razmak i novu bilješku. Zato se i sve izbriše
- * kad se ponovno ide unosit vrijednost u tu ćeliju.
- * Napravila sam tri tipa matrice matrica, gmatrica i pgmatrica. Mislila sam da u gmatricu stavimo generirani
- * riješeni sudoku, pa onda u pgmatricu postavimo svugdje 0 osim na mjestima koje ćemo ostavit otkrivenima na
- * početku igre. A matrica je onda matrica igre, u nju idu ta otkrivena polja i ona koja mi unosimo.
- * Za 9x9 sam stavila da su matrice tipa int, a 16x16 string zbog slova koja možemo unosit.
- * Onda se tijekom igre uspoređuju matrica i gmatrica nakon svake promjene vrijednosti ćelije i igra završava
- * kad su jednake, ali ne čim unesemo zadnju točnu vrijednost nego treba još jednom kliknut zbog funkcije u kojoj
- * je to napravljeno (jebiga, nisam znala drukčije).
- * To bi sve trebalo radit i za killer sudoku jer samo kad generiramo matricu treba onda nekako označiti ta polja
- * u kojima će biti sume.
- * A samurai je sjeban jer imamo 5 datagridview-ova. Morale bismo nekako restringirati da se samo jedno polje u tih
- * 5 različitih može označiti u jednom trenutku što je problematično jer ispada da svaki datagridview mora imati
- * defaultno polje koje je na početku označeno. To je ovo polje crvene boje u ostalim levelima, a nema ga u samurai
- * jer sam samo postavila da je boje pozadine. Inače bi vidjela više crvenih polja u isto vrijeme.
- * Još veći problem je taj jedan koji se preklapa s ostalima. Uopće ne znam kak bismo to mogle brzo i jednostavno
- * smislit.
- * Pitanja? XD
- */
-
-
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -340,11 +316,13 @@ namespace Sudoku
                     {
                         grid.Rows[i].Cells[j].Value = pgmatrica9[i, j];
                         grid.Rows[i].Cells[j].ReadOnly = true;
+                        grid.Rows[i].Cells[j].Style.ForeColor = Color.Black;
                     }
                     else if (cellnumber == 16 && pgmatrica16[i, j] != "")
                     {
                         grid.Rows[i].Cells[j].Value = pgmatrica16[i, j];
                         grid.Rows[i].Cells[j].ReadOnly = true;
+                        grid.Rows[i].Cells[j].Style.ForeColor = Color.Black;
                     }
                 }
             //podebljanje 3x3 odnosno 4x4 podtablica u tablici
